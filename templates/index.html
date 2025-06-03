@@ -6,31 +6,55 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-center p-6">
+    <!-- Logo -->
     <img src="/static/logo.png" alt="Logo" class="mx-auto w-32 mb-4">
+
+    <!-- Title -->
     <h1 class="text-2xl font-bold mb-4">Smart Rotating Surveillance System</h1>
-    <div class="flex justify-center">
+
+    <!-- Video Stream -->
+    <div class="flex justify-center mb-4">
         <img src="/video" class="rounded shadow-lg w-[720px]">
     </div>
-    <div id="alert-box" class="mt-4 text-red-600 font-semibold">
-        Loading alerts...
-    </div>
 
-    <div class="mt-4 space-x-2">
+    <!-- Controls -->
+    <div class="mt-4 space-x-2 mb-4">
         <button onclick="fetch('/toggle')" class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">Start / Stop</button>
         <button onclick="fetch('/snapshot')" class="px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">Snapshot</button>
         <button onclick="fetch('/mode')" class="px-4 py-2 bg-yellow-500 text-white rounded shadow hover:bg-yellow-600">Toggle Mode</button>
+        <a href="/dashboard" class="px-4 py-2 bg-gray-800 text-white rounded shadow hover:bg-gray-900">Dashboard</a>
     </div>
 
+    <!-- Alerts Section -->
+    <div id="alert-box" class="mt-4 text-left w-[720px] mx-auto bg-white border rounded p-4 text-sm shadow">
+        <p class="text-gray-500">Loading alerts...</p>
+    </div>
+
+    <!-- Footer -->
+    <p class="mt-4 text-gray-600">Live stream powered by YOLOv8</p>
+
+    <!-- Alert Fetch Script -->
     <script>
         async function fetchAlerts() {
-            const res = await fetch('/alert');
-            const text = await res.text();
-            document.getElementById("alert-box").innerText = text || "No alerts";
+            try {
+                const res = await fetch('/alert');
+                const alerts = await res.json();
+                const box = document.getElementById("alert-box");
+
+                if (alerts.length === 0) {
+                    box.innerHTML = "<p class='text-gray-500'>No alerts</p>";
+                } else {
+                    box.innerHTML = alerts.map(msg =>
+                        `<div class="text-red-600 mb-1">🚨 ${msg}</div>`
+                    ).join('');
+                }
+            } catch (err) {
+                console.error("Alert fetch failed:", err);
+            }
         }
 
         setInterval(fetchAlerts, 1000);
         fetchAlerts();
     </script>
-    <p class="mt-4 text-gray-600">Live stream powered by YOLOv8</p>
 </body>
 </html>
