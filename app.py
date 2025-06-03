@@ -17,5 +17,20 @@ def video():
 def alert():
     return cam.get_alerts()
 
+@app.route('/toggle')
+def toggle():
+    cam.toggle_streaming()
+    return "OK"
+
+@app.route('/mode')
+def mode():
+    cam.toggle_mode()
+    return "OK"
+
+@app.route('/snapshot')
+def snapshot():
+    path = cam.save_snapshot()
+    return f"Snapshot saved: {path}" if path else "No frame"
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

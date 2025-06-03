@@ -15,6 +15,12 @@
         Loading alerts...
     </div>
 
+    <div class="mt-4 space-x-2">
+        <button onclick="fetch('/toggle')" class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">Start / Stop</button>
+        <button onclick="fetch('/snapshot')" class="px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">Snapshot</button>
+        <button onclick="fetch('/mode')" class="px-4 py-2 bg-yellow-500 text-white rounded shadow hover:bg-yellow-600">Toggle Mode</button>
+    </div>
+
     <script>
         async function fetchAlerts() {
             const res = await fetch('/alert');
@@ -22,7 +28,7 @@
             document.getElementById("alert-box").innerText = text || "No alerts";
         }
 
-        setInterval(fetchAlerts, 1000);  // refresh every 1 sec
+        setInterval(fetchAlerts, 1000);
         fetchAlerts();
     </script>
     <p class="mt-4 text-gray-600">Live stream powered by YOLOv8</p>
