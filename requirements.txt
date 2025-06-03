@@ -1,0 +1,2 @@
+ultralytics==8.3.147
+flask==3.1.1
