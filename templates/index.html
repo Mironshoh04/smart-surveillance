@@ -11,6 +11,20 @@
     <div class="flex justify-center">
         <img src="/video" class="rounded shadow-lg w-[720px]">
     </div>
+    <div id="alert-box" class="mt-4 text-red-600 font-semibold">
+        Loading alerts...
+    </div>
+
+    <script>
+        async function fetchAlerts() {
+            const res = await fetch('/alert');
+            const text = await res.text();
+            document.getElementById("alert-box").innerText = text || "No alerts";
+        }
+
+        setInterval(fetchAlerts, 1000);  // refresh every 1 sec
+        fetchAlerts();
+    </script>
     <p class="mt-4 text-gray-600">Live stream powered by YOLOv8</p>
 </body>
 </html>
