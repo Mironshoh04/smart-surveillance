@@ -2,59 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Surveillance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Surveillance System</title>
+    <link rel="icon" href="/static/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #video-stream.loading {
+            background: url('/static/loading.gif') center center no-repeat;
+            background-size: 40px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-center p-6">
-    <!-- Logo -->
-    <img src="/static/logo.png" alt="Logo" class="mx-auto w-32 mb-4">
+<body class="bg-gradient-to-br from-[#e0c3fc] via-[#8ec5fc] to-[#a9c9ff] text-gray-800 min-h-screen flex flex-col items-center p-6">
+    <!-- Logo and Title -->
+    <div class="text-center mb-4">
+        <img src="/static/logo.png" alt="Logo" class="mx-auto w-16 mb-2">
+        <h1 class="text-2xl font-extrabold text-gray-800">Smart Surveillance System</h1>
+        <p class="text-sm text-gray-500">Live Detection using YOLOv8</p>
+    </div>
 
-    <!-- Title -->
-    <h1 class="text-2xl font-bold mb-4">Smart Rotating Surveillance System</h1>
+    <!-- Upload and Camera Buttons -->
+    <div class="flex justify-center gap-4 mb-4">
+        <button onclick="useCamera()" class="px-5 py-2 rounded bg-blue-600 text-white font-medium shadow hover:bg-blue-700">Use Camera</button>
+        <label class="px-5 py-2 rounded bg-purple-600 text-white font-medium shadow hover:bg-purple-700 cursor-pointer">
+            Upload Video
+            <input type="file" id="videoFile" name="video" accept="video/*" class="hidden" onchange="uploadVideo(event)">
+        </label>
+    </div>
+
+    <!-- Threshold Settings -->
+    <div class="w-full max-w-3xl flex justify-end mb-2">
+        <form method="POST" action="/settings" class="flex items-center gap-2 text-xs bg-white border border-gray-200 px-3 py-1.5 rounded shadow-sm">
+            <label class="text-gray-600 font-medium">Loiter:</label>
+            <input type="number" name="loiter_time" min="1" max="60" value="{{ settings.loiter_time }}"
+                   class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-gray-800">
+            <label class="ml-2 text-gray-600 font-medium">Crowd:</label>
+            <input type="number" name="crowd_threshold" min="1" max="20" value="{{ settings.crowd_threshold }}"
+                   class="w-12 px-1 py-0.5 border border-gray-300 rounded text-center text-gray-800">
+            <button type="submit"
+                    class="ml-2 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded shadow">
+                Apply
+            </button>
+        </form>
+    </div>
 
     <!-- Video Stream -->
-    <div class="flex justify-center mb-4">
-        <img src="/video" class="rounded shadow-lg w-[720px]">
+    <div id="video-container" class="w-full max-w-3xl rounded-lg overflow-hidden shadow border border-gray-200">
+        <img id="video-stream" src="/video" class="w-full loading" onload="removeLoading()" onerror="showError()">
     </div>
 
     <!-- Controls -->
-    <div class="mt-4 space-x-2 mb-4">
-        <button onclick="fetch('/toggle')" class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">Start / Stop</button>
-        <button onclick="fetch('/snapshot')" class="px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">Snapshot</button>
-        <button onclick="fetch('/mode')" class="px-4 py-2 bg-yellow-500 text-white rounded shadow hover:bg-yellow-600">Toggle Mode</button>
-        <a href="/dashboard" class="px-4 py-2 bg-gray-800 text-white rounded shadow hover:bg-gray-900">Dashboard</a>
+    <div class="mt-4 flex flex-wrap justify-center gap-3">
+        <button id="toggle-btn"
+            onclick="toggleStreaming()"
+            class="px-6 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">Loading...</button>
+        <button onclick="fetch('/snapshot')"
+            class="px-6 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">Snapshot</button>
+        <button onclick="fetch('/mode')"
+            class="px-6 py-2 text-sm font-semibold bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">Toggle Mode</button>
+        <a href="/dashboard"
+            class="px-6 py-2 text-sm font-semibold bg-gray-800 text-white rounded-lg shadow hover:bg-gray-900 transition">Analytics Dashboard</a>
     </div>
 
-    <!-- Alerts Section -->
-    <div id="alert-box" class="mt-4 text-left w-[720px] mx-auto bg-white border rounded p-4 text-sm shadow">
-        <p class="text-gray-500">Loading alerts...</p>
+    <!-- Alert Box -->
+    <div id="alert-box" class="mt-6 w-full max-w-3xl bg-white border border-gray-200 rounded-lg p-4 shadow text-left text-sm">
+        <p class="text-gray-400">Loading alerts...</p>
     </div>
 
     <!-- Footer -->
-    <p class="mt-4 text-gray-600">Live stream powered by YOLOv8</p>
+    <footer class="mt-12 text-xs text-gray-400">&copy; 2025 HumbleBee Team – Smart Surveillance Project</footer>
 
-    <!-- Alert Fetch Script -->
+    <!-- Script -->
     <script>
         async function fetchAlerts() {
             try {
                 const res = await fetch('/alert');
                 const alerts = await res.json();
                 const box = document.getElementById("alert-box");
-
                 if (alerts.length === 0) {
-                    box.innerHTML = "<p class='text-gray-500'>No alerts</p>";
+                    box.innerHTML = "<p class='text-gray-400'>No alerts</p>";
                 } else {
-                    box.innerHTML = alerts.map(msg =>
-                        `<div class="text-red-600 mb-1">🚨 ${msg}</div>`
-                    ).join('');
+                    box.innerHTML = alerts.map(msg => `<div class="text-red-600 font-medium mb-1">🚨 ${msg}</div>`).join('');
                 }
             } catch (err) {
                 console.error("Alert fetch failed:", err);
             }
         }
 
+        async function toggleStreaming() {
+            await fetch('/toggle');
+            updateToggleButton();
+        }
+
+        async function updateToggleButton() {
+            const res = await fetch('/status');
+            const state = await res.json();
+            const btn = document.getElementById('toggle-btn');
+            btn.innerText = state.streaming ? "Stop" : "Start";
+            btn.className = state.streaming
+                ? "px-6 py-2 text-sm font-semibold bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition"
+                : "px-6 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition";
+        }
+
+        function useCamera() {
+            window.location.href = "/";
+        }
+
+        function uploadVideo(event) {
+            const formData = new FormData();
+            formData.append('video', event.target.files[0]);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(res => {
+                if (res.ok) alert("✅ Video uploaded successfully!");
+                else alert("❌ Failed to upload video.");
+            });
+        }
+
+        function removeLoading() {
+            document.getElementById("video-stream").classList.remove("loading");
+        }
+
+        function showError() {
+            alert("⚠️ Unable to load camera or stream.");
+        }
+
         setInterval(fetchAlerts, 1000);
         fetchAlerts();
+        updateToggleButton();
     </script>
 </body>
 </html>

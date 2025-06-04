@@ -4,8 +4,8 @@ class BehaviorEngine:
     def __init__(self, loiter_time=5, crowd_threshold=3):
         self.loiter_time = loiter_time
         self.crowd_threshold = crowd_threshold
-        self.track_memory = {}          # track_id: (first_seen_time, last_position)
-        self.loitering_ids = set()      # to suppress duplicate loiter alerts
+        self.track_memory = {}  # track_id: (first_seen_time, last_position)
+        self.loitering_ids = set()  # to suppress duplicate loiter alerts
         self.last_crowd_alert_time = 0  # timestamp for last crowd alert
         self.alerts = []
 
