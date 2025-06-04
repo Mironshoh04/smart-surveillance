@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 from core.camera import VideoCamera
+import json
 import os
 
 UPLOAD_FOLDER='uploads'
@@ -76,10 +77,26 @@ def snapshot():
 def status():
     return {"streaming": cam.streaming}
 
+@app.route('/heatmap')
+def heatmap():
+    return jsonify(cam.logger.loitering_distribution())
+
 @app.route('/dashboard')
 def dashboard():
     stats = cam.logger.summary()
-    return render_template("dashboard.html", stats=stats)
+    loiter_hour = cam.logger.loitering_distribution()
+    labels = [f"{h:02d}:00" for h in range(24)]
+    values = [loiter_hour.get(h, 0) for h in range(24)]
+
+    min_labels, min_values = cam.logger.recent_loitering(30)
+
+    return render_template("dashboard.html",
+        stats=stats,
+        hourly_labels=labels,
+        hourly_values=values,
+        minutely_labels=min_labels,
+        minutely_values=min_values
+    )
 
 @app.route('/upload', methods=['POST'])
 def upload():

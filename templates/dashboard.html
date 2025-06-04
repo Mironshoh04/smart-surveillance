@@ -1,28 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Analytics Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Surveillance Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #e0f2ff, #fef6ff);
+    }
+  </style>
 </head>
-<body class="bg-white p-8 text-gray-800">
-    <h1 class="text-3xl font-bold mb-6">📊 Surveillance Analytics Dashboard</h1>
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-3 text-center">
-        <div class="p-6 border rounded shadow">
-            <h2 class="text-xl font-semibold">👥 Total People Today</h2>
-            <p class="text-3xl text-blue-600">{{ stats.people_today }}</p>
-        </div>
-        <div class="p-6 border rounded shadow">
-            <h2 class="text-xl font-semibold">🚨 Alerts Triggered</h2>
-            <p class="text-3xl text-red-600">{{ stats.alerts }}</p>
-        </div>
-        <div class="p-6 border rounded shadow">
-            <h2 class="text-xl font-semibold">🕒 Peak Hour</h2>
-            <p class="text-3xl text-green-600">{{ stats.peak_hour }}</p>
-        </div>
+<body class="min-h-screen text-gray-800 p-6">
+
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-extrabold">📊 Surveillance Analytics Dashboard</h1>
+    <p class="text-sm text-gray-600">Visual summary of loitering and detection activity</p>
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-3 text-center mb-10">
+    <div class="p-6 bg-white border rounded shadow">
+      <h2 class="text-xl font-semibold">👥 Total People Today</h2>
+      <p class="text-3xl text-blue-600 mt-2">{{ stats.people_today }}</p>
     </div>
-    <div class="mt-6">
-        <a href="/" class="text-blue-500 underline">← Back to Live Feed</a>
+    <div class="p-6 bg-white border rounded shadow">
+      <h2 class="text-xl font-semibold">🚨 Alerts Triggered</h2>
+      <p class="text-3xl text-red-600 mt-2">{{ stats.alerts }}</p>
     </div>
+    <div class="p-6 bg-white border rounded shadow">
+      <h2 class="text-xl font-semibold">🕒 Peak Hour</h2>
+      <p class="text-3xl text-green-600 mt-2">{{ stats.peak_hour }}</p>
+    </div>
+  </div>
+
+  <!-- Hourly Chart -->
+  <div class="w-full max-w-5xl mx-auto bg-white p-6 rounded shadow mb-12">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Loitering by Hour (24h)</h2>
+    <canvas id="hourlyChart" height="100"></canvas>
+  </div>
+
+  <!-- Minutely Chart -->
+  <div class="w-full max-w-5xl mx-auto bg-white p-6 rounded shadow mb-12">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">⏱️ Loitering in Last 30 Minutes</h2>
+    <canvas id="minuteChart" height="100"></canvas>
+  </div>
+
+  <!-- Back Link -->
+  <div class="text-center mt-8">
+    <a href="/" class="inline-block px-6 py-2 text-sm font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+      ← Back to Live Feed
+    </a>
+  </div>
+
+  <!-- Chart Script -->
+  <script>
+    const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+    new Chart(hourlyCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ hourly_labels | safe }},
+        datasets: [{
+          label: 'Loitering Events (Per Hour)',
+          data: {{ hourly_values | safe }},
+          backgroundColor: 'rgba(99, 102, 241, 0.7)',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 },
+            title: { display: true, text: 'Events' }
+          },
+          x: {
+            title: { display: true, text: 'Hour' }
+          }
+        }
+      }
+    });
+
+    const minuteCtx = document.getElementById('minuteChart').getContext('2d');
+    new Chart(minuteCtx, {
+      type: 'line',
+      data: {
+        labels: {{ minutely_labels | safe }},
+        datasets: [{
+          label: 'Loitering Events (Last 30 min)',
+          data: {{ minutely_values | safe }},
+          borderColor: 'rgba(34, 197, 94, 1)',
+          backgroundColor: 'rgba(34, 197, 94, 0.2)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 },
+            title: { display: true, text: 'Events' }
+          },
+          x: {
+            title: { display: true, text: 'Time (HH:MM)' }
+          }
+        }
+      }
+    });
+  </script>
+
 </body>
 </html>
